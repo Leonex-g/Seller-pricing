@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProfitX — Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --neon:#00ffe7;--neon2:#ff2d78;--neon3:#ffe600;
+    --bg:#050a0f;--bg2:#0a1520;--bg3:#0f1e2d;
+    --card:#0d1b2a;--border:rgba(0,255,231,0.18);
+    --text:#e0f7f4;--muted:#5a8a85;
+    --cat-color:var(--neon);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,231,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,231,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(5,10,15,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;color:var(--neon);text-shadow:0 0 20px var(--neon);letter-spacing:3px;text-decoration:none;}
+  .logo span{color:var(--neon2);}
+  .back-btn{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--muted);text-decoration:none;letter-spacing:2px;border:1px solid rgba(255,255,255,0.1);padding:7px 16px;transition:all 0.2s;}
+  .back-btn:hover{color:var(--neon);border-color:var(--neon);}
+
+  .page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:100px 24px 80px;}
+
+  /* HEADER */
+  .cat-header{
+    display:flex;align-items:flex-start;gap:24px;
+    padding:36px;
+    background:var(--card);
+    border:1px solid var(--cat-color,var(--neon));
+    border-radius:4px;
+    margin-bottom:32px;
+    position:relative;overflow:hidden;
+  }
+  .cat-header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,255,231,0.07),transparent 70%);pointer-events:none;}
+  .cat-emoji{font-size:4rem;filter:drop-shadow(0 0 15px var(--cat-color,var(--neon)));}
+  .cat-info h1{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;color:var(--cat-color,var(--neon));letter-spacing:2px;margin-bottom:6px;}
+  .cat-info p{color:var(--muted);font-size:1rem;}
+  .profit-badge{
+    margin-left:auto;text-align:center;
+    background:rgba(0,255,231,0.06);
+    border:1px solid var(--cat-color,var(--neon));
+    padding:16px 28px;border-radius:4px;min-width:180px;
+  }
+  .profit-badge .label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:3px;color:var(--muted);margin-bottom:6px;}
+  .profit-badge .amount{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;color:var(--neon3);text-shadow:0 0 20px var(--neon3);}
+  .profit-badge .margin{font-size:0.85rem;color:var(--muted);margin-top:4px;}
+
+  /* LAYOUT */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media(max-width:700px){.grid{grid-template-columns:1fr;}}
+
+  /* CARD */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:28px;position:relative;}
+  .card-title{
+    font-family:'Orbitron',sans-serif;font-size:0.8rem;letter-spacing:3px;
+    color:var(--cat-color,var(--neon));margin-bottom:24px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .card-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+  /* INPUTS */
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:0.8rem;letter-spacing:2px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;}
+  .field input{
+    width:100%;background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:3px;padding:11px 16px;
+    color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;
+    transition:border-color 0.2s,box-shadow 0.2s;
+    outline:none;
+  }
+  .field input:focus{border-color:var(--cat-color,var(--neon));box-shadow:0 0 12px rgba(0,255,231,0.1);}
+  .field input::placeholder{color:rgba(255,255,255,0.2);}
+  .field .hint{font-size:0.75rem;color:rgba(90,138,133,0.7);margin-top:5px;letter-spacing:1px;}
+
+  /* TOGGLE */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .toggle-label{font-size:0.85rem;color:var(--text);}
+  .toggle-sub{font-size:0.75rem;color:var(--muted);}
+  .toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;background:#1a2e3a;border:1px solid rgba(255,255,255,0.1);
+    border-radius:24px;cursor:pointer;transition:0.2s;
+  }
+  .slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#3a5a6a;border-radius:50%;transition:0.2s;}
+  input:checked+.slider{background:rgba(0,255,231,0.15);border-color:var(--cat-color,var(--neon));}
+  input:checked+.slider::before{transform:translateX(20px);background:var(--cat-color,var(--neon));box-shadow:0 0 8px var(--cat-color,var(--neon));}
+
+  /* RESULTS CARD */
+  .results-card{
+    background:var(--card);
+    border:1px solid var(--cat-color,var(--neon));
+    border-radius:4px;padding:32px;
+    margin-top:24px;position:relative;overflow:hidden;
+  }
+  .results-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,231,0.04),transparent 50%);pointer-events:none;}
+  .result-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+    font-size:1rem;
+  }
+  .result-row:last-child{border-bottom:none;}
+  .result-row.total{
+    margin-top:12px;padding-top:20px;
+    border-top:1px solid var(--cat-color,var(--neon));
+    border-bottom:none;
+  }
+  .result-row .r-label{color:var(--muted);font-size:0.85rem;letter-spacing:1px;}
+  .result-row .r-val{font-family:'Share Tech Mono',monospace;font-weight:700;}
+  .r-val.positive{color:#00ff88;text-shadow:0 0 12px rgba(0,255,136,0.4);}
+  .r-val.negative{color:var(--neon2);text-shadow:0 0 12px rgba(255,45,120,0.3);}
+  .r-val.neutral{color:var(--text);}
+  .total .r-label{font-family:'Orbitron',sans-serif;font-size:0.9rem;color:var(--text);letter-spacing:2px;}
+  .total .r-val{font-size:1.8rem;font-family:'Orbitron',sans-serif;}
+
+  /* MARGIN BAR */
+  .margin-bar-wrap{margin-top:20px;}
+  .margin-bar-label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);letter-spacing:2px;margin-bottom:8px;}
+  .margin-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+  .margin-fill{height:100%;border-radius:3px;transition:width 0.6s ease;background:linear-gradient(90deg,var(--neon2),var(--neon3),#00ff88);}
+
+  /* ADVICE BOX */
+  .advice{
+    margin-top:20px;padding:16px 20px;
+    border-radius:3px;font-size:0.9rem;line-height:1.6;
+    border-left:3px solid var(--cat-color,var(--neon));
+    background:rgba(0,255,231,0.04);
+    font-family:'Share Tech Mono',monospace;font-size:0.8rem;
+    letter-spacing:0.5px;color:var(--text);
+  }
+
+  /* CALC BTN */
+  .calc-btn{
+    width:100%;margin-top:24px;
+    padding:18px;
+    background:linear-gradient(135deg,rgba(0,255,231,0.1),rgba(0,255,231,0.05));
+    border:1px solid var(--cat-color,var(--neon));
+    color:var(--cat-color,var(--neon));
+    font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:4px;
+    cursor:pointer;border-radius:3px;
+    transition:all 0.3s;position:relative;overflow:hidden;
+  }
+  .calc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,231,0.15),transparent);opacity:0;transition:opacity 0.3s;}
+  .calc-btn:hover::before{opacity:1;}
+  .calc-btn:hover{box-shadow:0 0 30px rgba(0,255,231,0.2),0 0 60px rgba(0,255,231,0.08);transform:translateY(-1px);}
+  .calc-btn:active{transform:translateY(0);}
+
+  /* SHARE / RESET */
+  .action-row{display:flex;gap:12px;margin-top:16px;}
+  .sec-btn{
+    flex:1;padding:12px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.1);
+    color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:2px;
+    cursor:pointer;border-radius:3px;transition:all 0.2s;
+  }
+  .sec-btn:hover{border-color:var(--cat-color,var(--neon));color:var(--text);}
+
+  /* STATUS INDICATOR */
+  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cat-color,var(--neon));box-shadow:0 0 8px var(--cat-color,var(--neon));margin-right:8px;animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+  .full-col{grid-column:1/-1;}
+
+  /* EXPENSE BREAKDOWN TABLE */
+  .breakdown{width:100%;border-collapse:collapse;margin-top:8px;}
+  .breakdown td{padding:8px 0;font-size:0.88rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .breakdown td:last-child{text-align:right;font-family:'Share Tech Mono',monospace;color:var(--neon2);}
+  .breakdown tr:last-child td{border-bottom:none;}
+
+  /* TOOLTIP */
+  .tip{font-size:0.7rem;color:var(--muted);cursor:help;border-bottom:1px dashed var(--muted);}
+
+  /* ANIMATE IN */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .card,.cat-header,.results-card{animation:fadeUp 0.4s ease both;}
+  .card:nth-child(2){animation-delay:0.05s;}
+  .card:nth-child(3){animation-delay:0.1s;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="logo">PROFIT<span>X</span></a>
+  <a href="index.html" class="back-btn">← BACK TO CATEGORIES</a>
+</nav>
+
+<div class="page">
+  <div class="cat-header" id="catHeader">
+    <div class="cat-emoji" id="catEmoji">📦</div>
+    <div class="cat-info">
+      <h1 id="catName">CATEGORY</h1>
+      <p id="catDesc">Loading category details...</p>
+    </div>
+    <div class="profit-badge">
+      <div class="label">NET PROFIT</div>
+      <div class="amount" id="liveProfit">₹0</div>
+      <div class="margin" id="liveMargin">0% margin</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- REVENUE -->
+    <div class="card">
+      <div class="card-title"><span class="status-dot"></span>REVENUE</div>
+      <div class="field">
+        <label>Selling Price per Unit (₹)</label>
+        <input type="number" id="sellPrice" placeholder="e.g. 500" min="0"/>
+      </div>
+      <div class="field">
+        <label>Units Sold</label>
+        <input type="number" id="units" placeholder="e.g. 50" min="0"/>
+        <div class="hint">▸ Total Revenue = Price × Units</div>
+      </div>
+      <div class="field">
+        <label>Other Income (₹) <span class="tip" title="Bonuses, cashbacks, incentives">?</span></label>
+        <input type="number" id="otherIncome" placeholder="0" min="0"/>
+      </div>
+    </div>
+
+    <!-- PRODUCT COST -->
+    <div class="card">
+      <div class="card-title">PRODUCT COST</div>
+      <div class="field">
+        <label>Raw Material / Purchase Cost (₹/unit)</label>
+        <input type="number" id="cogs" placeholder="e.g. 200" min="0"/>
+      </div>
+      <div class="field">
+        <label>Packaging Cost (₹/unit)</label>
+        <input type="number" id="packaging" placeholder="e.g. 15" min="0"/>
+      </div>
+      <div class="field">
+        <label>Labour / Making Cost (₹/unit)</label>
+        <input type="number" id="labour" placeholder="e.g. 30" min="0"/>
+      </div>
+    </div>
+
+    <!-- PLATFORM EXPENSES -->
+    <div class="card">
+      <div class="card-title">PLATFORM & SHIPPING</div>
+      <div class="field">
+        <label>Platform Commission (%)</label>
+        <input type="number" id="commission" placeholder="e.g. 12" min="0" max="100"/>
+        <div class="hint" id="commHint">▸ Platform-specific rates apply</div>
+      </div>
+      <div class="field">
+        <label>Shipping Cost (₹/unit)</label>
+        <input type="number" id="shipping" placeholder="e.g. 50" min="0"/>
+      </div>
+      <div class="field">
+        <label>Reverse/Return Shipping (₹/unit)</label>
+        <input type="number" id="returnShip" placeholder="e.g. 60" min="0"/>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Returns & Refunds</div><div class="toggle-sub">Enter % of orders returned</div></div>
+        <label class="toggle"><input type="checkbox" id="returnsToggle" checked/><span class="slider"></span></label>
+      </div>
+      <div class="field" id="returnsField">
+        <label>Return Rate (%)</label>
+        <input type="number" id="returnRate" placeholder="e.g. 10" min="0" max="100"/>
+      </div>
+    </div>
+
+    <!-- MARKETING & TAX -->
+    <div class="card">
+      <div class="card-title">MARKETING & TAX</div>
+      <div class="field">
+        <label>Ads / Marketing Spend (₹ total)</label>
+        <input type="number" id="ads" placeholder="e.g. 500" min="0"/>
+      </div>
+      <div class="field">
+        <label>GST Rate (%)</label>
+        <input type="number" id="gst" placeholder="e.g. 18" min="0" max="28"/>
+        <div class="hint">▸ GST on value added (output - input tax)</div>
+      </div>
+      <div class="field">
+        <label>Other Expenses (₹ total)</label>
+        <input type="number" id="otherExp" placeholder="e.g. 200" min="0"/>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Input Tax Credit (ITC)</div><div class="toggle-sub">Claim GST on purchases</div></div>
+        <label class="toggle"><input type="checkbox" id="itcToggle"/><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">▶ CALCULATE NET PROFIT</button>
+
+  <!-- RESULTS -->
+  <div class="results-card" id="results" style="display:none;">
+    <div class="card-title"><span class="status-dot"></span>PROFIT BREAKDOWN</div>
+
+    <div class="result-row">
+      <span class="r-label">GROSS REVENUE</span>
+      <span class="r-val neutral" id="r_revenue">₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">COST OF GOODS</span>
+      <span class="r-val negative" id="r_cogs">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">PLATFORM COMMISSION</span>
+      <span class="r-val negative" id="r_comm">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">SHIPPING & PACKAGING</span>
+      <span class="r-val negative" id="r_ship">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">RETURNS & REFUNDS</span>
+      <span class="r-val negative" id="r_returns">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">ADS & MARKETING</span>
+      <span class="r-val negative" id="r_ads">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">GST (NET PAYABLE)</span>
+      <span class="r-val negative" id="r_gst">–₹0</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">OTHER EXPENSES</span>
+      <span class="r-val negative" id="r_other">–₹0</span>
+    </div>
+    <div class="result-row total">
+      <span class="r-label">NET PROFIT</span>
+      <span class="r-val" id="r_profit">₹0</span>
+    </div>
+
+    <div class="margin-bar-wrap">
+      <div class="margin-bar-label"><span>PROFIT MARGIN</span><span id="marginPct">0%</span></div>
+      <div class="margin-bar"><div class="margin-fill" id="marginFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="advice" id="adviceBox"></div>
+
+    <div class="action-row">
+      <button class="sec-btn" onclick="copyResults()">📋 COPY RESULTS</button>
+      <button class="sec-btn" onclick="resetAll()">↺ RESET</button>
+      <button class="sec-btn" onclick="window.print()">🖨 PRINT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS = {
+  food:{name:'FOOD / RESTAURANT',emoji:'🍕',desc:'Zomato, Swiggy & home kitchen profit calculator',color:'#ff9500',commHint:'▸ Swiggy ~18-22%, Zomato ~20-25% commission'},
+  meesho:{name:'MEESHO',emoji:'📦',desc:'Calculate your real Meesho earnings after all deductions',color:'#ff2d78',commHint:'▸ Meesho commission: 0-25% based on category'},
+  amazon:{name:'AMAZON / FLIPKART',emoji:'🛒',desc:'FBA fees, referral charges & ad spend profit calculator',color:'#ffe600',commHint:'▸ Amazon referral: 2-40%, Flipkart: 5-25%'},
+  fashion:{name:'CLOTHING / FASHION',emoji:'👗',desc:'Boutique & dropshipper net margin calculator',color:'#c77dff',commHint:'▸ Instagram/Meesho: 0-18% + shipping charges'},
+  electronics:{name:'ELECTRONICS',emoji:'⚡',desc:'Electronics dealer profit after fees & warranties',color:'#00cfff',commHint:'▸ Amazon Electronics: ~5-8% + fulfillment fees'},
+  handicraft:{name:'HANDICRAFTS / HANDMADE',emoji:'🏺',desc:'Artisan & handmade seller margin calculator',color:'#ff6b35',commHint:'▸ Etsy: 6.5% + listing fees, Craftsvilla: varies'}
+};
+
+const params = new URLSearchParams(window.location.search);
+const cat = params.get('cat') || 'meesho';
+const cfg = CATS[cat] || CATS['meesho'];
+
+// Apply theme
+document.documentElement.style.setProperty('--cat-color', cfg.color);
+document.getElementById('catEmoji').textContent = cfg.emoji;
+document.getElementById('catName').textContent = cfg.name;
+document.getElementById('catDesc').textContent = cfg.desc;
+document.getElementById('commHint').textContent = cfg.commHint;
+document.title = 'ProfitX — ' + cfg.name;
+
+// Toggle returns field
+document.getElementById('returnsToggle').addEventListener('change', function(){
+  document.getElementById('returnsField').style.display = this.checked ? 'block' : 'none';
+});
+
+function v(id){ return parseFloat(document.getElementById(id).value) || 0; }
+function fmt(n){ return '₹' + Math.abs(n).toLocaleString('en-IN', {maximumFractionDigits:2}); }
+
+function calculate(){
+  const sellPrice = v('sellPrice');
+  const units = v('units') || 1;
+  const otherIncome = v('otherIncome');
+  const cogs = v('cogs') * units;
+  const packaging = v('packaging') * units;
+  const labour = v('labour') * units;
+  const commPct = v('commission') / 100;
+  const shippingPU = v('shipping') * units;
+  const returnShipPU = v('returnShip');
+  const returnRate = document.getElementById('returnsToggle').checked ? v('returnRate') / 100 : 0;
+  const ads = v('ads');
+  const gstRate = v('gst') / 100;
+  const otherExp = v('otherExp');
+  const useITC = document.getElementById('itcToggle').checked;
+
+  const grossRevenue = sellPrice * units + otherIncome;
+  const commission = grossRevenue * commPct;
+  const returnedUnits = Math.floor(units * returnRate);
+  const returnCost = returnedUnits * (sellPrice + returnShipPU); // refund + reverse ship
+  const gstOnSales = grossRevenue * gstRate;
+  const gstInput = useITC ? (cogs + packaging) * gstRate : 0;
+  const netGST = Math.max(0, gstOnSales - gstInput);
+  const totalCOGS = cogs + packaging + labour;
+  const totalShip = shippingPU;
+
+  const totalExpenses = totalCOGS + commission + totalShip + returnCost + ads + netGST + otherExp;
+  const netProfit = grossRevenue - totalExpenses;
+  const margin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
+
+  // Update live badge
+  document.getElementById('liveProfit').textContent = fmt(netProfit);
+  document.getElementById('liveMargin').textContent = margin.toFixed(1) + '% margin';
+
+  // Fill results
+  document.getElementById('r_revenue').textContent = fmt(grossRevenue);
+  document.getElementById('r_cogs').textContent = '–' + fmt(totalCOGS);
+  document.getElementById('r_comm').textContent = '–' + fmt(commission);
+  document.getElementById('r_ship').textContent = '–' + fmt(totalShip);
+  document.getElementById('r_returns').textContent = '–' + fmt(returnCost);
+  document.getElementById('r_ads').textContent = '–' + fmt(ads);
+  document.getElementById('r_gst').textContent = '–' + fmt(netGST);
+  document.getElementById('r_other').textContent = '–' + fmt(otherExp);
+
+  const profitEl = document.getElementById('r_profit');
+  profitEl.textContent = (netProfit >= 0 ? '' : '–') + fmt(netProfit);
+  profitEl.className = 'r-val ' + (netProfit > 0 ? 'positive' : 'negative');
+
+  document.getElementById('marginPct').textContent = margin.toFixed(1) + '%';
+  document.getElementById('marginFill').style.width = Math.min(Math.max(margin, 0), 100) + '%';
+
+  // Advice
+  let advice = '';
+  if(margin < 0) advice = '⚠ You are selling at a LOSS. Increase price or reduce expenses immediately.';
+  else if(margin < 10) advice = '⚡ Margin below 10%. Consider reducing ad spend or negotiating supplier costs.';
+  else if(margin < 20) advice = '📊 Decent margin. Focus on scaling volume or cutting return rates to grow profits.';
+  else if(margin < 35) advice = '✅ Healthy margin! Reinvest in ads to scale revenue further.';
+  else advice = '🚀 Excellent margin! You are running a highly profitable operation. Scale aggressively!';
+  document.getElementById('adviceBox').textContent = advice;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Live update badge on input
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', () => {
+    const sp = v('sellPrice'), u = v('units') || 1;
+    const rough = (sp * u) - (v('cogs') + v('packaging') + v('labour')) * u - (sp * u * v('commission') / 100) - v('shipping') * u - v('ads');
+    document.getElementById('liveProfit').textContent = fmt(rough);
+  });
+});
+
+function copyResults(){
+  const lines = [
+    'PROFITX SELLER REPORT — ' + cfg.name,
+    '================================',
+    'Revenue: ' + document.getElementById('r_revenue').textContent,
+    'COGS: ' + document.getElementById('r_cogs').textContent,
+    'Commission: ' + document.getElementById('r_comm').textContent,
+    'Shipping: ' + document.getElementById('r_ship').textContent,
+    'Returns: ' + document.getElementById('r_returns').textContent,
+    'Ads: ' + document.getElementById('r_ads').textContent,
+    'GST: ' + document.getElementById('r_gst').textContent,
+    'Other: ' + document.getElementById('r_other').textContent,
+    '--------------------------------',
+    'NET PROFIT: ' + document.getElementById('r_profit').textContent,
+    'MARGIN: ' + document.getElementById('marginPct').textContent,
+  ].join('\n');
+  navigator.clipboard.writeText(lines).then(()=>alert('Results copied!'));
+}
+
+function resetAll(){
+  document.querySelectorAll('input[type=number]').forEach(e=>e.value='');
+  document.getElementById('results').style.display='none';
+  document.getElementById('liveProfit').textContent='₹0';
+  document.getElementById('liveMargin').textContent='0% margin';
+}
+</script>
+</body>
+</html>
